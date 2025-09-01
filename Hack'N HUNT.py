@@ -6,7 +6,7 @@ import pandas as pd
 file_url = .#search
 
 # Load Excel file from GitHub
-df = pd_read_excel(file_url)
+df = pd___read_excel(file_url)
 
 # get your team number given in the paper before and replace it with 0 eg:[1,2,3....29,30]
 encodedsecret = df.loc[0, 'encoded']
@@ -24,4 +24,5 @@ img = qrmake_image(fill_color="black", back_color="white")
 # Show(QR) in Colab
 img.show()
 #r"https://github.com/bspchits/HACK-N-HUNT-/blob/main/ENCODED%20WORDS.xlsx?raw=true"
+
 
