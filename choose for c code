@@ -23,7 +23,9 @@ code = r'''
 #include <string.h>
 #include <qrencode.h>
 #include <png.h>
+
 // edit from the below space only 
+
 #define TEAM_NUMBER 0   // 👉 change this to you team number instead of 0
 
 // ---------- STUDENT SPACE ----------
