@@ -1,0 +1,167 @@
+# ============================================================
+# STEP 1: Install dependencies (Don't Touch)
+# ============================================================
+!apt-get -qq install -y libqrencode-dev libpng-dev
+!pip install -q pandas openpyxl
+
+# ============================================================
+# STEP 2: Download Excel from GitHub and convert to CSV (Don't Touch)
+# ============================================================
+!wget -q -O c_words.xlsx "https://raw.githubusercontent.com/bspchits/HACK-N-HUNT-/main/c_words.xlsx"
+
+import pandas as pd
+df = pd.read_excel("c_words.xlsx")
+df.to_csv("c_words.csv", index=False)
+print("✅ CSV file created with", len(df), "rows")
+
+# ============================================================
+# STEP 3: Save C program (Correct Version Only, word hidden) (Don't Touch)
+# ============================================================
+code = r'''
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <qrencode.h>
+#include <png.h>
+
+#define TEAM_NUMBER 0   // 👉 change this to you team number instead of 0
+
+// ---------- STUDENT SPACE ----------
+void studentTask() {
+    printf("Multiplication Table of %d:\n", TEAM_NUMBER)
+    int i = 1
+    while (i <= 10) {
+        printf("\n%d x %d = %d" TEAM_NUMBER, i, TEAM_NUMBER * i)
+        i++;  
+    
+    printf("\n")
+}
+
+// ---------- QR Writer ----------
+void writePNG(QRcode *qrcode, const char *filename) {
+    FILE *fp = fopen(filename, "wb");
+    if (!fp) { perror("fopen"); exit(1); }
+
+    int size = qrcode->width;
+    int margin = 4;
+    int scale = 10;
+    int img_size = (size + margin * 2) * scale;
+
+    png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if (!png_ptr || !info_ptr) { fclose(fp); return; }
+
+    png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, img_size, img_size, 8,
+                 PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(png_ptr, info_ptr);
+
+    unsigned char *row = (unsigned char*)malloc(img_size);
+    for (int y = 0; y < img_size; y++) {
+        for (int x = 0; x < img_size; x++) {
+            int qr_x = (x/scale) - margin;
+            int qr_y = (y/scale) - margin;
+            int color = 255;
+            if (qr_x >= 0 && qr_x < size && qr_y >= 0 && qr_y < size) {
+                color = (qrcode->data[qr_y * size + qr_x] & 1) ? 0 : 255;
+            }
+            row[x] = color;
+        }
+        png_write_row(png_ptr, row);
+    }
+    free(row);
+
+    png_write_end(png_ptr, NULL);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    fclose(fp);
+}
+
+int main() {
+    // Run student task
+    studentTask();
+
+    FILE *fp = fopen("c_words.csv", "r");
+    if (!fp) { printf("CSV not found!\n"); return 1; }
+
+    char line[1024];
+    int row = -1;
+    fgets(line, sizeof(line), fp); // skip header
+
+    while (fgets(line, sizeof(line), fp)) {
+        row++;
+        if (row == TEAM_NUMBER) {
+            char word[256];
+            sscanf(line, "%[^,\n]", word);
+
+            // 🔒 Do NOT print the word
+
+            QRcode *q = QRcode_encodeString(word, 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+            if (!q) { fprintf(stderr, "QR generation failed!\n"); return 1; }
+
+            writePNG(q, "team_qr.png");
+            QRcode_free(q);
+
+            printf("QR code saved as team_qr.png\n");
+            break;
+        }
+    }
+    fclose(fp);
+    return 0;
+}
+'''
+
+with open("qprogram.c", "w") as f:
+    f.write(code)
+
+# ============================================================
+# STEP 4: Compile and run safely
+# ============================================================
+import subprocess
+import os
+
+# Remove any existing QR file to ensure fresh start
+if os.path.exists("team_qr.png"):
+    os.remove("team_qr.png")
+
+compile_cmd = ["gcc", "qprogram.c", "-o", "qprogram", "-lqrencode", "-lpng"]
+
+# Compile
+print("🔨 Compiling C program...")
+compile_result = subprocess.run(compile_cmd, capture_output=True, text=True)
+
+if compile_result.returncode != 0:
+    print("❌ Compilation failed. Students must fix errors!")
+    print("Compiler errors:")
+    print(compile_result.stderr)
+    compilation_successful = False
+else:
+    print("✅ Compilation successful!")
+    
+    # Only run if compilation succeeded
+    print("🚀 Running program...")
+    run_result = subprocess.run(["./qprogram"], capture_output=True, text=True)
+    
+    if run_result.returncode != 0:
+        print("❌ Program execution failed!")
+        print("Runtime errors:")
+        print(run_result.stderr)
+        compilation_successful = False
+    else:
+        print("✅ Program executed successfully!")
+        print("Program output:")
+        print(run_result.stdout)
+        compilation_successful = True
+
+# ============================================================
+# STEP 5: Show QR only if compilation and execution succeeded
+# ============================================================
+if compilation_successful and os.path.exists("team_qr.png"):
+    print("🎯 QR Code Generated Successfully!")
+    from PIL import Image
+    display(Image.open("team_qr.png"))
+else:
+    if not compilation_successful:
+        print("⚠️ No QR generated - Fix the code errors first!")
+    else:
+        print("⚠️ QR file not found - Program may not have executed properly!")
