@@ -23,7 +23,7 @@ code = r'''
 #include <string.h>
 #include <qrencode.h>
 #include <png.h>
-
+// edit from the below space only 
 #define TEAM_NUMBER 0   // 👉 change this to you team number instead of 0
 
 // ---------- STUDENT SPACE ----------
@@ -37,7 +37,7 @@ void studentTask() {
     printf("\n")
 }
 
-// ---------- QR Writer ----------
+// ---------- QR Writer ---------- (Don't Touch)
 void writePNG(QRcode *qrcode, const char *filename) {
     FILE *fp = fopen(filename, "wb");
     if (!fp) { perror("fopen"); exit(1); }
@@ -115,7 +115,7 @@ with open("qprogram.c", "w") as f:
     f.write(code)
 
 # ============================================================
-# STEP 4: Compile and run safely
+# STEP 4: Compile and run safely (Don't Touch)
 # ============================================================
 import subprocess
 import os
@@ -154,7 +154,7 @@ else:
         compilation_successful = True
 
 # ============================================================
-# STEP 5: Show QR only if compilation and execution succeeded
+# STEP 5: Show QR only if compilation and execution succeeded (Don't Touch)
 # ============================================================
 if compilation_successful and os.path.exists("team_qr.png"):
     print("🎯 QR Code Generated Successfully!")
